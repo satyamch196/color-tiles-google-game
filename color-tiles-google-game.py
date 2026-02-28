@@ -108,10 +108,9 @@ def add_level():
 		ml=int(input("Board Length: "))
 		mb=int(input("Board Breadth: "))
 		make_level_matrix(level,ml,mb)
-def new_read_levels(level,original_matrix_dimensions,trim_matrix_dimensions,pointer_location,input_alphabet,level_matrix):
+def new_read_levels(level,matrix_dimensions,pointer_location,input_alphabet,level_matrix):
 #	if matrix_length==0 and matrix_breadth==0:
-	matrix_length,matrix_breadth=original_matrix_dimensions
-	trim_matrix_length,trim_matrix_breadth=trim_matrix_dimensions
+	matrix_length,matrix_breadth=matrix_dimensions
 	if input_alphabet.isalpha():
 		input_alphabet=input_alphabet.upper()
 	print(Terminal.clear + Terminal.home) # Clear the screen and move to Top-Left
@@ -119,12 +118,9 @@ def new_read_levels(level,original_matrix_dimensions,trim_matrix_dimensions,poin
 	print("Use the arrow keys to navigate between rows, columns and special options")
 	if level in level_dictionary.keys():
 		print("EDITING: Level",level)
-	elif level==-1:
-		print("TRIMMING LEVEL BOARD: Level",level)
 	else:
 		print("ADDING: New Level",level)
 	print("Board Dimensions (LENGTH×BREADTH) : ",matrix_length,"×",matrix_breadth,sep="")
-#	for level in level_dictionary.keys():
 	mappings="""Available Keys and their Mapping:
 R :  \033[31m██\033[0m    # Red
 Y :  \033[33m██\033[0m    # Yellow
@@ -136,11 +132,7 @@ O :  \033[38;5;208m██\033[0m    # Orange (256-color code 208)
 -1:  \033[37m██\033[0m    # White
 0 :  " "   # No color (Space)"""
 #	block="▒" #"▓"
-	if level!=-1:
-		print(mappings)
-	else:
-		print("New Board Dimensions (LENGTH×BREADTH) : ",trim_matrix_length,"×",trim_matrix_breadth,sep="")
-		print("Use The Arrow Keys to Select The Area to Keep After Trimming")
+	print(mappings)
 	len_row=len(level_matrix[0])
 	for row in range(len(level_matrix)):
 		print("-"*(len_row*5+1),"\n|",end="")
@@ -168,96 +160,11 @@ O :  \033[38;5;208m██\033[0m    # Orange (256-color code 208)
 		input()
 		break
 exit()'''
-"""def trim_matrix(trim_matrix_dimensions,level_matrix):
-	def print_trimmed_level_matrix(trim_matrix_dimensions,pointer_location,level_matrix):
-		matrix_length=len(level_matrix)
-		matrix_breadth=len(level_matrix[0])
-		trim_matrix_length,trim_matrix_breadth=trim_matrix_dimensions
-#	if input_alphabet.isalpha():
-#		input_alphabet=input_alphabet.upper()
-		print(Terminal.clear + Terminal.home) # Clear the screen and move to Top-Left
-#	print("\033c",end="",flush=True)
-		print("TRIMMING LEVEL BOARD: Level",level)
-		print("Original Board Dimensions (LENGTH×BREADTH) : ",matrix_length,"×",matrix_breadth,sep="")
-		print("New Board Dimensions (LENGTH×BREADTH) : ",trim_matrix_length,"×",trim_matrix_breadth,sep="")
-		print("Use The Arrow Keys to Select The Area to Keep After Trimming, Press TAB key to select among the Options")
-		removed_part_=(matrix_length-trim_matrix_dimensions[0],matrix_breadth-trim_matrix_dimensions[1])
-		len_row=len(level_matrix[0])
-		for row in range(len(level_matrix)):
-			print("-"*(len_row*5+1),"\n|",end="")
-			for column in range(len_row):
-				if row >= matrix_length-trim_matrix_dimensions[0]: #(row,column)==pointer_location:
-#					if input_alphabet not in mapping.keys():
-					print("",(mapping[level_matrix[row][column]].format(▒))*2,"|",end="")
-#					else:
-#						print("",(mapping[input_alphabet].format(▒))*2,"|",end="")
-				else:
-					print(" ",(mapping[level_matrix[row][column]].format(""█))*2," |",sep="",end="")
-			print()
-		print("-"*(len_row*5+1))
-		if pointer_location==(len_row+1,0):
-			print(" "*((len_row-2)*3//2),"\033[47;30m","[TRIM]","\033[0m"," "*((len_row-2)*3//2),"[BACK]",sep="")
-		elif pointer_location==(len_row+1,1):
-			print(" "*((len_row-2)*3//2),"[TRIM]"," "*((len_row-2)*3//2),"\033[47;30m","[BACK]","\033[0m",sep="")
-	pointer_location=(0,0)
-	matrix_length=len(level_matrix)
-	matrix_breadth=len(level_matrix[0])
-	curr_r,curr_c=0,0
-	active_part="upper"
-	with Terminal.cbreak(), Terminal.hidden_cursor():
-		while True:
-			print_trimmed_level_matrix(trim_matrix_dimensions,pointer_location,level_matrix)
-			key=Terminal.inkey()
-			if key.is_sequence:
-				if key.name=="KEY_UP" and curr_r > 0:
-					curr_r-=1
-				elif key.name=="KEY_DOWN" and curr_r < (matrix_length - trim_matrix_dimensions[0] - 1):
-					curr_r+=1
-				elif key.name=="KEY_LEFT" and curr_c > 0:
-					curr_c-=1
-				elif key.name=="KEY_RIGHT" and curr_c < (matrix_breadth - trim_matrix_dimensions[1] - 1):
-					curr_c+=1
-				if curr_r==matrix_length and curr_c > 1: #Prevent Out-Of-Boundary on the two options
-					curr_c=1
-#				pointer_location=(curr_r,curr_c)
-				if curr_r==(matrix_length+1):
-					if curr_c==0 and key.name=="KEY_ENTER":
-						#Add proper logic to return correct level matrix
-						return level_matrix
-					elif curr_c==1 and key.name=="KEY_ENTER"::
-						print(Terminal.normal_cursor,end="",flush=True)
-						with Terminal.cooked():
-							while True:
-								print("\rCONFIRMATION: The Current Changes Won't Be Saved, Do you still want to go to the previous menu (Y/n) ? ",end="",flush=True)
-								choice=input()
-								if choice.isalpha():
-									if len(choice.split())==0 or choice=="Y" or choice=="y":
-										choice="Y"
-										break
-									elif choice=="N" or choice=="n":
-										choice="N"
-										break
-						print(Terminal.hidden_cursor,end="",flush=True)
-						if choice=="Y":
-							level_matrix=[]
-							return level_matrix
-							break #Get back to trim selection menu
-			if key and not key.is_sequence:
-				if key.name=="KEY_TAB":
-					if active_part=="upper":
-						active_part="lower"
-						curr_r+=matrix_length
-					elif active_part=="lower":
-						active_part="lower"
-						curr_r-=matrix_length
-			if curr_r==matrix_length and curr_c > 1:
-				curr_c=1
-			pointer_location=(curr_r,curr_c)"""
 def trim_matrix(level,keep_rows,keep_cols,level_matrix):
     term=Terminal()
     # Total Matrix Dimensions
     max_rows = len(level_matrix)
-    max_cols = len(level_matrix[0]) #if max_rows > 0 else 0
+    max_cols = len(level_matrix[0])
     # Selection Window Origin (Top-Left Corner)
     # Ensuring the window fits within the matrix
     curr_r = 0
@@ -408,6 +315,7 @@ def new_make_level_matrix(level,matrix_length,matrix_breadth):
 			matrix_breadth=len(level_matrix[0])"""
 	else:
 		level_matrix=create_empty_matrix(matrix_length,matrix_breadth)
+	term=Terminal()
 	pointer_location=(0,0)
 	original_matrix_dimensions=(matrix_length,matrix_breadth)
 	trim_matrix_dimensions=(0,0)
@@ -415,13 +323,13 @@ def new_make_level_matrix(level,matrix_length,matrix_breadth):
 	curr_r,curr_c=0,0
 	orig_level_matrix=deepcopy(level_matrix)
 	message=""
-	with Terminal.cbreak(), Terminal.hidden_cursor():
+	with term.cbreak(), term.hidden_cursor():
 		while True:
 			new_read_levels(level,original_matrix_dimensions,trim_matrix_dimensions,pointer_location,input_alphabet,level_matrix)
 			if message!="":
 				print("Message: ",message)
 			message=""
-			key=Terminal.inkey()
+			key=term.inkey()
 			if key.is_sequence:
 				if key.name=="KEY_UP" and curr_r > 0:
 					curr_r-=1
@@ -442,8 +350,8 @@ def new_make_level_matrix(level,matrix_length,matrix_breadth):
 							dump(level_dictionary,file)
 						#Write the updated dictionary to the file as well
 					elif curr_c==1 and key.name=="KEY_ENTER":
-						print(Terminal.normal_cursor,end="",flush=True)
-						with Terminal.cooked():
+						print(term.normal_cursor,end="",flush=True)
+						with term.cooked():
 							while True:
 								print("\rCONFIRMATION: The Current Changes Won't Be Saved, Do you still want to reset the board (Y/n) ? ",end="",flush=True)
 								choice=input()
@@ -452,10 +360,10 @@ def new_make_level_matrix(level,matrix_length,matrix_breadth):
 										message="Reset Complete"
 										level_matrix=deepcopy(orig_level_matrix)
 										break
-						print(Terminal.hidden_cursor,end="",flush=True)
+						print(term.hidden_cursor,end="",flush=True)
 					elif curr_c==2 and key.name=="KEY_ENTER":
-						print(Terminal.normal_cursor,end="",flush=True)
-						with Terminal.cooked():
+						print(term.normal_cursor,end="",flush=True)
+						with term.cooked():
 							while True:
 								print("\rCONFIRMATION: The Current Changes Won't Be Saved, Do you still want to go to the previous menu (Y/n) ? ",end="",flush=True)
 								choice=input()
@@ -466,7 +374,7 @@ def new_make_level_matrix(level,matrix_length,matrix_breadth):
 									elif choice=="N" or choice=="n":
 										choice="N"
 										break
-						print(Terminal.hidden_cursor,end="",flush=True)
+						print(term.hidden_cursor,end="",flush=True)
 						if choice=="Y":
 							break #Get back to level selection menu
 			elif key and not key.is_sequence: # and str(key).upper() in mapping.keys(): #Probably has an error
@@ -537,6 +445,10 @@ def print_board(level,level_matrix):
 			print("",(mapping[element].format("█"))*2,"|",end="")
 		print()
 	print("-"*(len(row)*5+1))
+def reverse_columnwise(level_matrix):
+	for row in range(len(level_matrix)):
+		level_matrix[row]=level_matrix[row][::-1]
+	return level_matrix
 def move_blocks(direction,level_matrix):
 	global old_level_matrices
 	try:
@@ -567,17 +479,18 @@ def move_blocks(direction,level_matrix):
 					level_matrix[row][index]=level_matrix[row][index+1]
 					level_matrix[row][index+1]="0"
 	if direction=="D": #Same operation as an A operation if the matrix is reversed column wise
-		def reverse_columnwise(level_matrix):
-			for row in range(len(level_matrix)):
-				level_matrix[row]=level_matrix[row][::-1]
-		reverse_columnwise(level_matrix)
+#		def reverse_columnwise(level_matrix):
+#			for row in range(len(level_matrix)):
+#				level_matrix[row]=level_matrix[row][::-1]
+		level_matrix=reverse_columnwise(level_matrix)
 		for row in range(len(level_matrix)):
 			for index in range(len(level_matrix[row])-1):
 				if (level_matrix[row][index]=="0") and (level_matrix[row][index+1] not in ["0","-1"]):
 					level_matrix[row][index]=level_matrix[row][index+1]
 					level_matrix[row][index+1]="0"
-		reverse_columnwise(level_matrix)
-def check_for_match(moves,level_matrix):
+		level_matrix=reverse_columnwise(level_matrix)
+def check_for_match(moves,level_matrix): #Still a function written in pseudo code
+	return
 	old_moves=int(moves)
 	uniq_elements=[] #Stores the unique elements in the level matrix
 #	occurrences=0 #Used to store occurrences of a unique element
@@ -586,15 +499,30 @@ def check_for_match(moves,level_matrix):
 		for element in row:
 			if (element not in ["0","-1"]) and (element not in uniq_elements):
 				uniq_elements.append(element)
+	for row in level_matrix:
+		for element in row:
+			if element not in ["0","-1"]:
+				for uniq_element in unique_elements:
+					exit()
+	uniq_elements_dict={} # unique_element and number of occurences as a key value pair
 	for uniq_element in uniq_elements:
-		matches=[] #Stores the location and thus the total number of matching elements
-		occurrences=0 #Used to store occurrences of a unique element
+		occurences=0
+		for row in level_matrix:
+			for element in row and element not in ("0","-1"):
+				if element==uniq_element:
+					occurrences+=1
+		if uniq_element not in ("0","-1"):
+			uniq_elements_dict[uniq_element]=occurrences
+	for uniq_element in uniq_elements:
+		matches=[] #Stores the location and thus the total number of unique elements
+#		occurrences=0 #Used to store occurrences of a unique element
 		for row in range(level_matrix):
 			for column in level_matrix[row]:
 				if uniq_element==level_matrix[row][column]:
 					occurrences+=1
 					if (row,column) not in matches:
 						matches.append((row,column))
+					continue
 					if row > 0: # Next if conditions are useless as the above if statement adds all positional tuple to the matches list
 						if (uniq_element==level_matrix[row-1][column]) and ((row-1,column) not in matches):
 							matches.append((row-1,column))
@@ -607,8 +535,27 @@ def check_for_match(moves,level_matrix):
 					if column < len(level_matrix[0]): #Useless
 						if (uniq_element==level_matrix[row][column+1]) and ((row,column+1) not in matches):
 							matches.append((row,column+1))
-		if len(matches)==occurrences:
-			moves+=1
+#		if len(matches)==occurrences:
+		for coordinates in matches:
+			x,y=coordinates
+			if (x+1,y) in matches:
+				pass
+			if (x-1,y) in matches:
+				pass
+			if (x,y+1) in matches:
+				pass
+			if (x,y-1) in matches:
+				pass
+			if found_new_element_in_proximity:
+				pass
+		if len(elements_in_proximity_list)=number_of_occurrences:
+			moves=moves+1
+	if new_moves - input_moves >1:
+		return "perfect"
+	elif new_moves - input_moves = 0:
+		moves -= 1
+		return "no changes"
+#			moves+=1
 def undo_last_action(): #while_deducting_one_move
 	#No level downgrade with undo allowed
 	global moves,undo_calls
