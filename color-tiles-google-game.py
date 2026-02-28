@@ -253,7 +253,7 @@ exit()'''
 			if curr_r==matrix_length and curr_c > 1:
 				curr_c=1
 			pointer_location=(curr_r,curr_c)"""
-def interactive_sliding_matrix(level,keep_rows,keep_cols,level_matrix):
+def trim_matrix(level,keep_rows,keep_cols,level_matrix):
     term=Terminal()
     # Total Matrix Dimensions
     max_rows = len(level_matrix)
@@ -268,6 +268,8 @@ def interactive_sliding_matrix(level,keep_rows,keep_cols,level_matrix):
     focus = 'matrix' # 'matrix' or 'buttons'
     btn_idx = 0      # 0 for TRIM, 1 for BACK
     tab_count=0
+    get_back="n"
+    return_trimmed="n"
     with term.fullscreen(), term.cbreak(), term.hidden_cursor():
         while True:
              print(term.clear + term.home) # Clear the screen and move to Top-Left
@@ -282,18 +284,12 @@ def interactive_sliding_matrix(level,keep_rows,keep_cols,level_matrix):
                  print("-" * ((max_cols *5)+1),"\n|",end="")
                  line = ""
                  for column in range(max_cols):
-                     val = (mapping[level_matrix[row][column]]) #.center(4)
+                     val = (mapping[level_matrix[row][column]])
                      # Check if current cell is within the selection window
                      is_in_window = (curr_r <= row < curr_r + k_rows and curr_c <= column < curr_c + k_cols)
                      if is_in_window:
-#                     	val+="|"
-#                         if focus == 'matrix':
-#                             line += term.black_on_green(val)+"|"
-#                         else:
-#                             line += term.green(val)+"|"
                           line += " "+(val.format("█"))*2+" |"
                      else:
-#                         line += term.white(val)+"|"
                           if level_matrix[row][column]=="0":
                               line += " ░░ |"
                           else:
@@ -308,11 +304,14 @@ def interactive_sliding_matrix(level,keep_rows,keep_cols,level_matrix):
              for index in range(len(btns)):
                  if focus == 'buttons' and btn_idx == index:
                      btn_line+=" "*((max_cols*1)-2)
-                     btn_line += term.black_on_white("[" + btns[index] + "]") #+ "    "
+                     btn_line += term.black_on_white("[" + btns[index] + "]")
                  else:
-                     btn_line += " "*((max_cols*1)-2) + btns[index] #+ " "*(max_cols-2)
+                     btn_line += " "*((max_cols*1)-2) + btns[index]
              print(btn_line.center(max_cols*2))
-
+             if get_back=="y":
+                 print("CONFIRMATION: The Current Changes Won't Be Saved, Do you still want to go to the previous menu (Y/N) ? ")
+             elif return_trimmed=="y":
+                 print("CONFIRMATION: Do you want to save the changes (Y/N) ? ")
             # --- Input Handling ---
              key = term.inkey()
 
@@ -321,8 +320,22 @@ def interactive_sliding_matrix(level,keep_rows,keep_cols,level_matrix):
                  if focus == "matrix":
                      focus = 'buttons'
                  else:
-                     if tab_count >2:
+                     if tab_count ==1:
+                         focus="buttons"
+                         btn_idx=0
+                         continue
+                     elif tab_count == 2:
+                     	focus="buttons"
+                     	if btn_idx == 1:
+                     	    focus = "matrix"
+                     	    btn_idx=0
+                     	    tab_count=0
+                     	else:
+                     	    btn_idx=1
+                     	continue
+                     elif tab_count == 3:
                          focus = 'matrix'
+                         btn_idx=0
                          tab_count=0
 
              elif focus == 'matrix':
@@ -335,29 +348,30 @@ def interactive_sliding_matrix(level,keep_rows,keep_cols,level_matrix):
                      curr_c = max(0, curr_c - 1)
                  elif key.name == 'KEY_RIGHT':
                      curr_c = min(max_cols - k_cols, curr_c + 1)
-                 else:
-                     print("Unsupported Key:",key.name)
-
              elif focus == 'buttons':
-                 if key.name == 'KEY_LEFT':
+                 if get_back=="y" or return_trimmed=="y":
+                     if str(key).isalpha():
+                         if str(key).upper() == "Y":
+                             if get_back=="y":
+                                 return []
+                             elif return_trimmed=="y":
+                                 return trimmed
+                         elif str(key).upper() == "N":
+                             get_back="n"
+                             return_trimmed="n"
+                             continue
+                 elif key.name == 'KEY_LEFT':
                      btn_idx = 0
                  elif key.name == 'KEY_RIGHT':
                      btn_idx = 1
-                 elif key.name == "KEY_TAB":
-                     if btn_idx == 0:
-                         btn_idx=1
-                     else:
-                         btn_idx=0
                  elif key.name == 'KEY_ENTER' or key == '\n':
                      if btns[btn_idx] == "TRIM":
                          # Extract the windowed area
                          trimmed = [row[curr_c : curr_c + k_cols] for row in level_matrix[curr_r : curr_r + k_rows]]
-                         return trimmed
+                         return_trimmed="y"
                      else:
-                         return []
-                 else:
-                     print("Unsupported Key:",key.name)
-print(interactive_sliding_matrix(13,6,6,level_dictionary[13]))
+                         get_back="y"
+#print(interactive_sliding_matrix(13,6,6,level_dictionary[13]))
 def create_empty_matrix(matrix_length,matrix_breadth):
 	level_matrix=[]
 	for row in range(matrix_length):
@@ -455,10 +469,14 @@ def new_make_level_matrix(level,matrix_length,matrix_breadth):
 						print(Terminal.hidden_cursor,end="",flush=True)
 						if choice=="Y":
 							break #Get back to level selection menu
-			elif key and not key.is_sequence: #and str(key) in mapping.keys():
-				level_matrix[curr_r][curr_c]=str(key)
-				input_alphabet=str(key)
-				
+			elif key and not key.is_sequence: # and str(key).upper() in mapping.keys(): #Probably has an error
+				key=str(key)
+				if key.isalpha() and key.upper() in mapping.keys():
+					level_matrix[curr_r][curr_c]=key.upper()
+					input_alphabet=key.upper()
+				elif key in ("0","-1"):
+					level_matrix[curr_r][curr_c]=key
+					input_alphabet=key
 	while True:
 		m=[]
 		for column in range(ml):
