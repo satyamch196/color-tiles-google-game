@@ -1,0 +1,6 @@
+All this happens in the original game 
+The original game subtracts moves if a move is made, then adds to moves if elements matched.
+Then perfect gives additional single move, if perfect happenned in level where two types of elements
+matched together, two addutional moves are given
+Overall, moves remain unchanged if a unique element matches due to the move and only add up according to the "perfect" conditions
+Using undo to achieve conditions of perfect do not work
