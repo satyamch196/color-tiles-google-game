@@ -4,3 +4,4 @@ Then perfect gives additional single move, if perfect happenned in level where t
 matched together, two addutional moves are given
 Overall, moves remain unchanged if a unique element matches due to the move and only add up according to the "perfect" conditions
 Using undo to achieve conditions of perfect do not work
+Escape key exits game

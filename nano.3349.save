@@ -1,0 +1,118 @@
+def trim_matrix(level,keep_rows,keep_cols,level_matrix):
+    term=Terminal()
+    # Total Matrix Dimensions
+    max_rows = len(level_matrix)
+    max_cols = len(level_matrix[0])
+    # Selection Window Origin (Top-Left Corner)
+    # Ensuring the window fits within the matrix
+    curr_r = 0
+    curr_c = 0
+    # Keep dimensions (clamped to matrix size just in case)
+    k_rows = min(keep_rows, max_rows)
+    k_cols = min(keep_cols, max_cols)
+    focus = 'matrix' # 'matrix' or 'buttons'
+    btn_idx = 0      # 0 for TRIM, 1 for BACK
+    tab_count=0
+    get_back="n"
+    return_trimmed="n"
+    with term.fullscreen(), term.cbreak(), term.hidden_cursor():
+        while True:
+             print(term.clear + term.home) # Clear the screen and move to Top-Left
+#            print("\033c",end="",flush=True)
+             print("TRIMMING LEVEL BOARD: Level",level)
+             print("Original Board Dimensions (LENGTH×BREADTH) : ",max_rows,"×",max_cols,sep="")
+             print("New Board Dimensions (LENGTH×BREADTH) : ",keep_rows,"×",keep_cols,sep="")
+             print("Use The Arrow Keys to Select The Area to Keep After Trimming, Press TAB key to choose among the Options, Press ENTER key to select\n")
+#            print("Arrows: Move Window | TAB: Toggle Focus | ENTER: Select\n")
+            # --- Render Matrix ---
+             for row in range(max_rows):
+                 print("-" * ((max_cols *5)+1),"\n|",end="")
+                 line = ""
+                 for column in range(max_cols):
+                     val = (mapping[level_matrix[row][column]])
+                     # Check if current cell is within the selection window
+                     is_in_window = (curr_r <= row < curr_r + k_rows and curr_c <= column < curr_c + k_cols)
+                     if is_in_window:
+                          line += " "+(val.format("█"))*2+" |"
+                     else:
+                          if level_matrix[row][column]=="0":
+                              line += " ░░ |"
+                          else:
+                              line += " "+(val.format("▒"))*2+" |"
+                 print(line)
+
+             print("-" * ((max_cols * 5)+1))
+
+            # --- Render Buttons ---
+             btns = ["TRIM", "BACK"]
+             btn_line = "   "
+             for index in range(len(btns)):
+                 if focus == 'buttons' and btn_idx == index:
+                     btn_line+=" "*((max_cols*1)-2)
+                     btn_line += term.black_on_white("[" + btns[index] + "]")
+                 else:
+                     btn_line += " "*((max_cols*1)-2) + btns[index]
+             print(btn_line.center(max_cols*2))
+             if get_back=="y":
+                 print("CONFIRMATION: The Current Changes Won't Be Saved, Do you still want to go to the previous menu (Y/N) ? ")
+             elif return_trimmed=="y":
+                 print("CONFIRMATION: Do you want to save the changes (Y/N) ? ")
+            # --- Input Handling ---
+             key = term.inkey()
+
+             if key.name == 'KEY_TAB':
+                 tab_count+=1
+                 if focus == "matrix":
+                     focus = 'buttons'
+                 else:
+                     if tab_count ==1:
+                         focus="buttons"
+                         btn_idx=0
+                         continue
+                     elif tab_count == 2:
+                     	focus="buttons"
+                     	if btn_idx == 1:
+                     	    focus = "matrix"
+                     	    btn_idx=0
+                     	    tab_count=0
+                     	else:
+                     	    btn_idx=1
+                     	continue
+                     elif tab_count == 3:
+                         focus = 'matrix'
+                         btn_idx=0
+                         tab_count=0
+
+             elif focus == 'matrix':
+                 # Move the selection window origin
+                 if key.name == 'KEY_UP':
+                     curr_r = max(0, curr_r - 1)
+                 elif key.name == 'KEY_DOWN':
+                     curr_r = min(max_rows - k_rows, curr_r + 1)
+                 elif key.name == 'KEY_LEFT':
+                     curr_c = max(0, curr_c - 1)
+                 elif key.name == 'KEY_RIGHT':
+                     curr_c = min(max_cols - k_cols, curr_c + 1)
+             elif focus == 'buttons':
+                 if get_back=="y" or return_trimmed=="y":
+                     if str(key).isalpha():
+                         if str(key).upper() == "Y":
+                             if get_back=="y":
+                                 return []
+                             elif return_trimmed=="y":
+                                 return trimmed
+                         elif str(key).upper() == "N":
+                             get_back="n"
+                             return_trimmed="n"
+                             continue
+                 elif key.name == 'KEY_LEFT':
+                     btn_idx = 0
+                 elif key.name == 'KEY_RIGHT':
+                     btn_idx = 1
+                 elif key.name == 'KEY_ENTER' or key == '\n':
+                     if btns[btn_idx] == "TRIM":
+                         # Extract the windowed area
+                         trimmed = [row[curr_c : curr_c + k_cols] for row in level_matrix[curr_r : curr_r + k_rows]]
+                         return_trimmed="y"
+                     else:
+                         get_back="y"

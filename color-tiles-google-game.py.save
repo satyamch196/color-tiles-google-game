@@ -631,7 +631,7 @@ def play_game(ctrl_c=False):
 	btn_idx=0 # 0 to undo, 1 to reset, 2 to exit
 	tab_count=0
 	get_back="n"
-	restart_game="n"
+	restart_ganm="n"
 	undo="n"
 	choice=""
 	direction=""
@@ -644,7 +644,7 @@ def play_game(ctrl_c=False):
 	level=level-1
 	while True:
 		level+=1
-		if level==14: #level not in level_dictionary.keys():
+		if level not in level_dictionary.keys():
 			save_progress(1,3,level_dictionary[1],[]) #[['Y', 'R', 'R'], ['0', 'Y', 'Y'], ['Y', 'R', 'R']])
 			level=1
 			moves=3
@@ -688,10 +688,10 @@ def play_game(ctrl_c=False):
 #					print()
 #				print("-"*(len(row)*5+1))
 				if message!="":
-					print(message,end="")
+					print(message)
 				message=""
 				if moves_message!="":
-					print(moves_message,end="")
+					print(moves_message)
 				moves_message=""
 				if moves<=3:
 					print("Moves Remaining:\033[31m",moves,"\033[0m")
@@ -748,9 +748,7 @@ def play_game(ctrl_c=False):
 						btn_line += " "*(12+(len(level_matrix[0])*1)-2) + btns[index]
 				print(btn_line.center(72))
 				if get_back=="y":
-					print("COMFIRMATION : Exit the Game (Y/N) ?")
-				elif restart_game=="y":
-					print("By Restarting the game, you will loose your current progress. \nRestart the Game (Y/N) ?")
+					print("COMFIRMATION : Exit Game (Y/N) ?")
 #				if ctrl_c==True:
 #					direction="E"
 #					print("Saving current progress before exiting...")
@@ -761,64 +759,42 @@ def play_game(ctrl_c=False):
 #				continue
 #				if get_back=="y":
 #					direction="E"
-#				elif restart_game=="y":
+#				elif reset_game=="y":
 #					print("CONFIRMATION: Do you want to RESET the Game (Y/N) ? ")
 #				if level_matrix==level_dictionary[level]:
 #					print("Enter\u001b[9m U to Undo,\u001b[0m E to Exit, R to Reset the Game") #UNDO option disabled at game start
 #				else:
 #					print("Enter U to Undo, E to Exit, R to Restart the game")
-				direction=""
 				try:
 					key=term.inkey()
 				except KeyboardInterrupt:
-					print("Saving current progress before exiting...")
+#					print("Saving current progress before exiting...")
 					save_progress(level,moves,level_matrix,old_level_matrices)
-					print("Progress saved, exiting...")
-					sleep(1) #To display save message
+#					print("Progress saved, exiting...")
 #					exit()
 					ctrl_c=True
 					break
 #				direction=input("Enter Your Choice: ")
-				if key.name == 'KEY_TAB': # and (get_back!="y" or restart_game!="y"):
-					if get_back=="y" or restart_game=="y":
-						continue
+				if key.name == 'KEY_TAB':
 					tab_count+=1
 					if focus == "matrix":
 						focus = 'buttons'
 						btn_idx=0
 						continue
 					else:
-#						if tab_count ==1:
-#							focus="buttons"
-#							btn_idx=0
-#							continue
 						if tab_count == 2:
-#							focus="buttons"
-#							btn_idx=1
-#							continue
 							if btn_idx == 1:
-								focus = "buttons"
 								btn_idx=2
-#								tab_count=0
 							elif btn_idx == 2:
-#								btn_idx=1
 								focus="matrix"
 								tab_count=0
 								btn_idx=0
 							else: # if btn_idx==0
 								btn_idx=1
-								focus="buttons"
 							continue
 						elif tab_count == 3:
 							btn_idx=2
-							focus="buttons"
 							continue
-#							if btn_idx==2:
-#								focus="buttons"
-#								btn_idx=0
-#							elif btn_idx==1:
-#								btn_idx=0
-#							else:
 						elif tab_count == 4:
 							focus = 'matrix'
 							btn_idx=0
@@ -842,62 +818,45 @@ def play_game(ctrl_c=False):
 						elif str(key).upper()=="S":
 							direction="S"
 						elif str(key).upper()=="D":
-							direction="D"
+							direction=="D"
 				elif focus == 'buttons':
-					if get_back=="y" or restart_game=="y":
-#						print("CONFIRMATION: EXIT ?")
+					if get_back=="y" or reset_game=="y" or undo=="y":
 						if str(key).isalpha():
 							if str(key).upper() == "Y":
 								if get_back=="y":
-#									ctrl_c=True
-#									get_back="n"
-									direction="E"
-									print("Saving current progress before exiting...")
-									save_progress(level,moves,level_matrix,old_level_matrices)
-									print("Progress saved, exiting...")
-									sleep(1) #To display save message
+									ctrl_c=True
 									break
-								elif restart_game=="y": #Probably has some issues with level promotion
+#									direction="E"
+								elif reset_game=="y": # Probay has issues with level promotion
+#									direction="R"
 									level=0 #level gets +1 at each loop iteration
 									moves=3
 									level_matrix=deepcopy(level_dictionary[1])
 									old_level_matrices=[]
-									restart_game="n"
+									reset
 									break
-#								elif undo=="y":
-#									level_matrix,message=deepcopy(undo_last_action())
+								elif undo=="y":
+									
 							elif str(key).upper() == "N":
 								get_back="n"
 								restart_game="n"
 								undo="n"
 								continue
-#					elif undo=="y":
-#						level_matrix,message=deepcopy(undo_last_action())
-#						undo="n"
 					elif key.name=="KEY_LEFT":
-						focus="buttons"
 						if btn_idx==2:
 							btn_idx=1
 						else:
 							btn_idx=0
-						continue
 					elif key.name=="KEY_RIGHT":
-						focus="buttons"
 						if btn_idx==0:
 							btn_idx=1
 						else:
 							btn_idx=2
-						continue
 					elif key.name=="KEY_ENTER" or key=='\n':
-						focus="buttons"
-						if btn_idx==0:
-							level_matrix,message=deepcopy(undo_last_action())
-#							undo="y"
-						elif btn_idx==1:
-							restart_game="y"
-						else:
+						if btns[btn_idx]=="TRIM":
+							return_trimmed="y"
+						elif btns[btn_idx]=="EXIT":
 							get_back="y"
-						continue
 					elif str(key).isalpha():
 						if str(key).upper()=="A":
 							if btn_idx==2:
@@ -909,7 +868,6 @@ def play_game(ctrl_c=False):
 								btn_idx=1
 							else:
 								btn_idx=2
-						continue
 #				if direction.upper()=="W" or direction.upper()=="A" or direction.upper()=="S" or direction.upper()=="D":
 #				continue
 				if direction in "WASD":
@@ -946,31 +904,32 @@ def play_game(ctrl_c=False):
 							break
 						else:
 							save_progress(level,moves,level_matrix,old_level_matrices)
-				elif direction=="E":
+				elif direction=="E" or direction=="e":
 					direction="E"
 					print("Saving current progress before exiting...")
 					save_progress(level,moves,level_matrix,old_level_matrices)
 					print("Progress saved, exiting...")
-					sleep(1) #Sleep to show save message
 					break
-#				elif direction=="R" or direction=="r": #Has some issues with level promotion
+				elif direction=="R" or direction=="r": #Has some issues with level promotion
 #					confirm=""
-#					while confirm.lower() not in ("y","n"):
+					restart_game="y"
+#					while True: #confirm.lower() not in ("y","n"):
 #						print("\r",end="",flush=True)
-#						print("By Restarting the game, you will loose your current progress. \nRestart the Game (Y/n) ? ") #,end="") #Ask for reset confirmation
+#					print("By Restarting the game, you will loose your current progress. \nRestart the Game (Y/N) ?") #,end="") #Ask for reset confirmation
 #						confirm=input()
-#						if len(confirm.split())==0:
-#							confirm="y"
-#						if not confirm.isalpha():
-#							confirm=""
-#					if confirm.lower()=="y":
-#						level=0 #level gets +1 at each loop iteration
-#						moves=3
-#						level_matrix=deepcopy(level_dictionary[1])
-#						old_level_matrices=[]
-#						break
-#				elif direction=="U" or direction=="u":
-#					level_matrix,message=deepcopy(undo_last_action())
+						
+						if len(confirm.split())==0:
+							confirm="y"
+						if not confirm.isalpha():
+							confirm=""
+					if confirm.lower()=="y":
+						level=0 #level gets +1 at each loop iteration
+						moves=3
+						level_matrix=deepcopy(level_dictionary[1])
+						old_level_matrices=[]
+						break
+				elif direction=="U" or direction=="u":
+					level_matrix,message=deepcopy(undo_last_action())
 #					if old_level_matrices[-1]!=level_matrix:
 #						moves=moves-1
 			if choice=="E" or direction=="E" or ctrl_c==True:
