@@ -5,11 +5,11 @@
 #Use terminal background coloring with blank spaces instead of the solid blocks used to print the level
 #matrix
 #Utilize blessed.Terminal.center(string)
-from pickle import dump,load
-from os import path
-from copy import deepcopy
-from blessed import Terminal
-from time import sleep
+from pickle import dump,load #To read/write level dictionary, save or load progress
+from os import path #To save or load progress from a file
+from copy import deepcopy #To create an independent copy of avariable
+from blessed import Terminal #To take key input and use UI elements
+from time import sleep #To show save message and animation on tiles match
 level_dictionary={} #LEVEL DICTIONARY
 level_dictionary={
 	1: [['Y', 'R', 'R'], ['0', 'Y', 'Y'], ['Y', 'R', 'R']],
@@ -26,6 +26,7 @@ level_dictionary={
 	12: [['Y', 'G', 'G', '-1', 'B', '0', 'O', '0'], ['0', '0', '0', '0', '0', 'B', 'Y', 'O'], ['Y', 'C', 'G', '-1', 'B', 'B', 'O', 'O'], ['0', '0', 'Y', '0', 'R', 'C', 'C', 'G'], ['V', '-1', '0', 'R', '0', 'R', 'C', '0'], ['0', '0', '0', '0', 'R', 'V', 'V', '0'], ['V', '-1', '-1', '-1', '0', '0', '0', '0'], ['0', '0', '0', '0', '0', '0', '0', '0']],
 	13: [['0', '0', '0', '0', '0', 'G', 'O', '0'], ['0', '0', '0', 'G', '0', 'G', 'V', '0'], ['0', 'R', 'B', '0', 'G', 'O', 'Y', '-1'], ['0', '0', '0', '0', '0', 'Y', '0', 'V'], ['0', 'B', 'B', '0', '-1', 'Y', 'Y', 'V'], ['0', '0', 'R', 'R', 'C', '0', 'V', 'O'], ['R', '0', '0', '0', 'C', '0', 'C', 'C'], ['-1', '-1', '0', '0', 'C', '-1', '-1', 'O']]
 	}
+	# mapping formats the level matrix
 mapping = {
 	'R':  "\033[31m{0}\033[0m",       # Red
 	'Y':  "\033[33m{0}\033[0m",       # Yellow
@@ -37,26 +38,29 @@ mapping = {
 	'-1': "\033[37m{0}\033[0m",       # White
 	'0':  " " #"{0}"                  # No color (Space)
 	} # If making changes to mapping, do update mappings string
-filename="/sdcard/level_dictionary.dict"
-if path.exists(filename):
+filename="/sdcard/level_dictionary.dict" #Level dictionary in a file
+if path.exists(filename): #Load level dictionary from file
     with open(filename, 'rb') as file:
         level_dictionary = load(file)
 #else:
 #    with open(filename, 'wb') as file:
 #        dump(level_dictionary,file)
 #        exit()
-def check_for_integer(string):
+def check_for_integer(string): #Check if 'string' is an integer
 	try:
 		integer=int(string)
 		return integer
 	except ValueError:
 		return string
-def matrix_length_breadth_handler():
+def matrix_length_breadth_handler(): #Interactively takes new matrix length and breadth
 	while True:
 		print("\rEnter Board Length (0 to exit): ",end="",flush=True)
 		matrix_length=input()
 		matrix_length=check_for_integer(matrix_length)
 		if type(matrix_length)!=int:
+			continue
+		elif matrix_length<3: #Seperate condition statement as the if condition ensures other statements get only an integer to check
+			print("Board Length should be at least 3.")
 			continue
 		else:
 			if matrix_length==0:
@@ -71,12 +75,15 @@ def matrix_length_breadth_handler():
 		matrix_breadth=check_for_integer(matrix_breadth)
 		if type(matrix_breadth)!=int:
 			continue
+		elif matrix_breadth<3:
+			print("Board Breadth should be at least 3.")
+			continue
 		else:
 			if matrix_breadth==0:
 				exit()
 			break
 	return (matrix_length,matrix_breadth)
-def make_level_matrix(level,ml,mb):
+def make_level_matrix(level,ml,mb): #Older, non-interactive implementation to make level matrix
 	#Make it directly interactive, allow and show changes to the matrix in real time, with current selection highlighting
 	global m #LEVEL MATRIX
 	while True:
@@ -106,7 +113,7 @@ def make_level_matrix(level,ml,mb):
 				break
 		if cont=="Y":
 			break
-def read_levels(level_dictionary):
+def read_levels(level_dictionary): #Old implementation to print the matrix
 	for level in level_dictionary.keys():
 		print("LEVEL:",level)
 		for row in level_dictionary[level]:
@@ -115,7 +122,7 @@ def read_levels(level_dictionary):
 				print("",mapping[element]*2,"|",end="")
 			print()
 		print("-"*(len(row)*5+1))
-def add_level():
+def add_level(): #Level matrix addition entry point
 	read_levels(level_dictionary)
 	while True:
 		level=int(input("Enter Level Number (0 to exit): "))
@@ -124,12 +131,13 @@ def add_level():
 		ml=int(input("Board Length: "))
 		mb=int(input("Board Breadth: "))
 		make_level_matrix(level,ml,mb)
-def new_read_levels(level,matrix_dimensions,pointer_location,input_alphabet,level_matrix):
+def new_read_levels(level,matrix_dimensions,pointer_location,input_alphabet,level_matrix): #Print live changes to the level matrix
 #	if matrix_length==0 and matrix_breadth==0:
+	term=Terminal()
 	matrix_length,matrix_breadth=matrix_dimensions
 	if input_alphabet.isalpha():
 		input_alphabet=input_alphabet.upper()
-	print(Terminal.clear + Terminal.home) # Clear the screen and move to Top-Left
+	print(term.clear + term.home) # Clear the screen and move to Top-Left
 #	print("\033c",end="",flush=True)
 	print("Use the arrow keys to navigate between rows, columns and special options")
 	if level in level_dictionary.keys():
@@ -176,7 +184,7 @@ O :  \033[38;5;208m██\033[0m    # Orange (256-color code 208)
 		input()
 		break
 exit()'''
-def trim_matrix(level,keep_rows,keep_cols,level_matrix):
+def trim_matrix(level,keep_rows,keep_cols,level_matrix): #To trim an already existing matrix
     term=Terminal()
     # Total Matrix Dimensions
     max_rows = len(level_matrix)
@@ -295,7 +303,7 @@ def trim_matrix(level,keep_rows,keep_cols,level_matrix):
                      else:
                          get_back="y"
 #print(interactive_sliding_matrix(13,6,6,level_dictionary[13]))
-def new_make_level_matrix(level,matrix_length,matrix_breadth):
+def new_make_level_matrix(level,matrix_length,matrix_breadth): #Takes matrix information and lets choose the next operation
 	global level_dictionary
 	#Make it directly interactive, allow and show changes to the matrix in real time
 	if level in level_dictionary.keys():
@@ -335,7 +343,7 @@ def new_make_level_matrix(level,matrix_length,matrix_breadth):
 	message=""
 	with term.cbreak(), term.hidden_cursor():
 		while True:
-			new_read_levels(level,original_matrix_dimensions,trim_matrix_dimensions,pointer_location,input_alphabet,level_matrix)
+			new_read_levels(level,original_matrix_dimensions,pointer_location,input_alphabet,level_matrix)
 			if message!="":
 				print("Message: ",message)
 			message=""
@@ -447,6 +455,8 @@ def new_add_level():
 		else:
 			matrix_length,matrix_breadth=matrix_length_breadth_handler()
 			new_make_level_matrix(level,matrix_length,matrix_breadth)
+#new_add_level()
+#exit()
 """
 def print_board(level,level_matrix):
 	print("LEVEL:",level)
@@ -501,10 +511,13 @@ def move_blocks(direction,level_matrix):
 					level_matrix[row][index]=level_matrix[row][index+1]
 					level_matrix[row][index+1]="0"
 		level_matrix=reverse_columnwise(level_matrix)
-def check_for_match(moves,level_matrix):
+def check_for_match(level,moves,focus,btn_idx,message,moves_message,level_matrix):
+	global old_level_matrices
+	old_level_matrix=deepcopy(level_matrix)
 	moves_message=""
+#	matched=False
 	if not level_matrix: # If level matrix is empty, do not make any changes
-		return (moves,level_matrix) #No Changes
+		return (moves_message,moves,level_matrix) #No Changes
 	rows = len(level_matrix)
 	cols = len(level_matrix[0])
 	# 1. Count total occurrences of every unique element in the matrix
@@ -518,7 +531,7 @@ def check_for_match(moves,level_matrix):
 	visited = set()
 	match_count = 0
 	# We need to track which cells to turn into '0' after checking all matches
-	to_be_replaced = []
+	to_be_replaced = {}
 	for r in range(rows):
 		for c in range(cols):
 			char = level_matrix[r][c] # Got the current element
@@ -530,7 +543,7 @@ def check_for_match(moves,level_matrix):
 			stack = [(r, c)] #Saving the current element coordinates
 			visited.add((r, c)) #Ensuring no recheck for already checked element
 			while stack: #True till stack is not empty
-				curr_r, curr_c = stack.pop() #Get coordinates of cuurently selected element, coordinates change as more connected elements are found
+				curr_r, curr_c = stack.pop() #Get coordinates of curently selected element, coordinates change as more connected elements are found
 				group.append((curr_r, curr_c)) # Saving the coordinates as the element belongs to the group of currently selected element
 				# Check 4 neighbors (Up, Down, Left, Right)
 				for dr, dc in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
@@ -542,13 +555,26 @@ def check_for_match(moves,level_matrix):
 			# Does the size of this connected group match the total count in the matrix?
 			if len(group) == total_counts[char]:
 				match_count += 1
-				to_be_replaced.extend(group)
+				#print(char,group)
+				to_be_replaced[char]=group
+				#sleep(1)
 	# Replace all matched elements with "0"
-	for r, c in to_be_replaced:
-		level_matrix[r][c] = "0"
+	for char in to_be_replaced.keys():
+		for row_idx in range(rows):
+			for col_idx in range(cols):
+				if (row_idx,col_idx) in to_be_replaced[char]:
+					level_matrix[row_idx][col_idx] = "0"
+					sleep(0.2)
+					print_board(level,moves,focus,btn_idx,message,moves_message,level_matrix)
+		if len(to_be_replaced)>1:
+			sleep(0.5)
+		for r, c in to_be_replaced[char]:
+			level_matrix[r][c] = "0"
 	# 5. Return moves changes and the edited level matrix
-	if match_count >= 1:
-		if match_count >1:
+	if match_count > 0:
+#		matched=True
+		old_level_matrices.append(old_level_matrix)
+		if match_count > 1:
 			s="s"
 		else:
 			s=""
@@ -563,27 +589,6 @@ def check_for_match(moves,level_matrix):
 		moves_message=""
 		return (moves_message,moves,level_matrix) #no changes
 
-"""
-# --- Test Cases ---
-
-matrix1 = [['0', 'R', 'R'], 
-           ['Y', 'Y', 'Y'], 
-           ['Y', 'R', 'R']]
-print(f"Matches found: {check_for_match(3,matrix1)}") 
-# Output: 1 (The Y's form a group of 4)
-
-matrix2 = [['R', 'R', 'Y', 'R'], 
-           ['0', 'Y', 'Y', 'R'], 
-           ['0', 'Y', 'B', '0'], 
-           ['0', 'B', 'B', 'B']]
-print(f"Matches found: {check_for_match(3,matrix2)}") 
-# Output: 2 (Y and B both have groups of 4)
-
-level_matrix=[["Y","R","R"],["0","Y","Y"],["Y","R","R"]]
-print(check_for_match(3,level_matrix)) #[["Y","Y","0","0"],["Y","Y","Y","0"],["0","Y","0","0"],["Y","0","Y","0"]])) #level_dictionary[1])
-
-print(check_for_match(3,[["Y","R","R"],["Y","Y","0"],["Y","R","R"]])) #level_dictionary[1])
-"""
 def undo_last_action(): #while_deducting_one_move
 	#No level downgrade with undo allowed
 	global moves,undo_calls
@@ -595,7 +600,7 @@ def undo_last_action(): #while_deducting_one_move
 	except IndexError:
 		pass"""
 #	print(old_level_matrices)
-	if old_level_matrices==[] or level_matrix in level_dictionary.values():
+	if (old_level_matrices==[] or level_matrix in level_dictionary.values()) or moves==0:
 		message="UNDO operation not possible\n"
 		undo_calls=0
 		return (level_matrix,message)
@@ -611,6 +616,8 @@ def undo_last_action(): #while_deducting_one_move
 		last_level_matrix=old_level_matrices.pop() #remove last element from old_level_matrices and save the last element to last_level_matrix becuase undo is possible but redo is not
 		return (last_level_matrix,message)
 def save_progress(level,moves,level_matrix,old_level_matrices):
+	if level<1:
+		raise ValueError("Level ValueError: level can't be less than 1, "+str(level)+" given")
 	return
 	print("Check for proper level and moves change with changing level")
 	progress=(level,moves,level_matrix,old_level_matrices)
@@ -624,26 +631,144 @@ def load_progress(filename="color-tiles-google-game.progress"):
 #		progress = (1,10,level_dictionary[1],[]) #moves set to 10 for testing
 		progress = (1,3,level_dictionary[1],[]) #[['Y', 'R', 'R'], ['0', 'Y', 'Y'], ['Y', 'R', 'R']])
 	return progress
+def print_board(level,moves,focus,btn_idx,message,moves_message,level_matrix):
+	try:
+		term=Terminal()
+#		print("\033c",end="",flush=True) #Clear Screen at each prompt
+		print(term.clear+term.home)
+#		print_board(level,level_matrix)
+		print("LEVEL:",level)
+#		print("Press W or Arrow Up key to swipe UP, S or Arrow Down key to swipe DOWN,")
+#		print("A or Arrow Left to swipe LEFT, D or Arrow Right to swipe RIGHT")
+#		for row in level_matrix:
+#			print("-"*(len(row)*5+1),"\n|",end="")
+#			for element in row:
+#				print("",(mapping[element].format("█"))*2,"|",end="")
+#			print()
+#		print("-"*(len(row)*5+1))
+		if message!="":
+			print(message,end="")
+#		message=""
+		if moves_message!="":
+			print(moves_message,end="")
+#		moves_message=""
+		if moves<=3:
+			print("Moves Remaining:\033[31m",moves,"\033[0m")
+		else:
+			print("Moves Remaining:\033[92m",moves,"\033[0m")
+		"""if moves==0:
+			print("\033[31mGAME OVER ! you are out of moves.\033[0m")
+#			while True:
+#				print("\r",end="",flush=True)
+#				print("\r(R)etry or (E)xit ? ",end="",flush=True)
+#			choice=input("(R)etry or (E)xit ? ")
+#				if ((choice.isalpha()) and (choice.upper() in "RE")) and len(choice)==1:
+#				if choice.upper()=="R" or choice.upper()=="E":
+			print("Press R key to Retry or E key to Exit")
+#			if choice.isalpha():
+			if choice=="E" or choice=="e":
+				choice="E"
+				print("Saving current progress before exiting...")
+				save_progress(level,moves,level_matrix,old_level_matrices)
+				print("Progress saved, exiting...")
+#				break
+			elif choice=="R" or choice=="r":
+				level=0 # level gets +1 at each loop iteration
+				moves=3
+				level_matrix=deepcopy(level_dictionary[1])
+				old_level_matrices=[]
+#				break
+			break"""
+		print("Press W or Arrow Up key to swipe UP, S or Arrow Down key to swipe DOWN,")
+		print("Press A or Arrow Left to swipe LEFT, D or Arrow Right to swipe RIGHT")
+		print("Press TAB to Choose the options, Enter to Select an option")
+		for row in level_matrix:
+			row_sep=("-"*(len(row)*5+1)).center(72)
+			print(row_sep)
+			for index in range(len(row_sep)):
+				if row_sep[index]=="-":
+					centralise_row=" "*index
+					break
+			row_line="|"
+			for element in row:
+				row_line+=" "+(mapping[element].format("█")*2)+" |"
+			print(centralise_row+row_line)
+		print(("-"*(len(row)*5+1)).center(72))
+		print("-"*72)
+		btns=["UNDO","RESTART","EXIT"]
+		if level_matrix==level_dictionary[level] or moves==0:
+			btns[0]="\u001b[9mUNDO\u001b[0m"
+		btn_line = "   "
+		for index in range(len(btns)):
+			if focus == 'buttons' and btn_idx == index:
+				btn_line+=" "*(12+(len(level_matrix[0])*1)-2)
+				btn_line += term.black_on_white("[" + btns[index] + "]")
+			else:
+				btn_line += " "*(12+(len(level_matrix[0])*1)-2) + btns[index]
+		print(btn_line.center(72))
+	except KeyboardInterrupt:
+		print_board(level,moves,focus,btn_idx,message,moves_message,level_matrix)
+		return
+'''		print(term.clear+term.home)
+		print("LEVEL:",level)
+		if moves<=3:
+			print("Moves Remaining:\033[31m",moves,"\033[0m")
+		else:
+			print("Moves Remaining:\033[92m",moves,"\033[0m")
+		print("Press W or Arrow Up key to swipe UP, S or Arrow Down key to swipe DOWN,")
+		print("Press A or Arrow Left to swipe LEFT, D or Arrow Right to swipe RIGHT")
+		print("Press TAB to Choose the options, Enter to Select an option")
+		print(("-"*72))
+		for row in level_matrix:
+			row_sep=("-"*(len(row)*5+1)).center(72)
+			print(row_sep)
+			for index in range(len(row_sep)):
+				if row_sep[index]=="-":
+					centralise_row=" "*index
+					break
+			row_line="|"
+			for element in row:
+				row_line+=" "+(mapping[element].format("█")*2)+" |"
+			print(centralise_row+row_line)
+		print(("-"*(len(row)*5+1)).center(72))
+		print("-"*72)
+		btns=["UNDO","Restart","EXIT"]
+		if level_matrix==level_dictionary[level]:
+			btns[0]="\u001b[9mUNDO\u001b[0m"
+		btn_line = "   "
+		for index in range(len(btns)):
+#			if focus == 'buttons' and btn_idx == index:
+#				btn_line+=" "*(12+(len(level_matrix[0])*1)-2)
+#				btn_line += term.black_on_white("[" + btns[index] + "]")
+#			else:
+			btn_line += " "*(12+(len(level_matrix[0])*1)-2) + btns[index]
+		print(btn_line.center(72))
+'''
 def play_game(ctrl_c=False):
 	global level,moves,undo_calls,level_matrix,old_level_matrices
 	term=Terminal()
 	focus="matrix" # "matrix" or "buttons"
-	btn_idx=0 # 0 to undo, 1 to reset, 2 to exit
+	btn_idx=0 # 0 to undo, 1 to Restart, 2 to exit
 	tab_count=0
 	get_back="n"
 	restart_game="n"
 	undo="n"
+	empty=False
 	choice=""
 	direction=""
 	message=""
 	moves_message=""
 	undo_calls=0
+#	empty=False
 	level,moves,level_matrix,old_level_matrices=load_progress("color-tiles-google-game.progress")
 	saved_level_matrix=deepcopy(level_matrix)
 	saved_level=int(level)
-	level=level-1
+#	level=level-1
 	while True:
-		level+=1
+#		level+=1
+		if empty==True:
+			level+=1
+			empty=False
 		if level==14: #level not in level_dictionary.keys():
 			save_progress(1,3,level_dictionary[1],[]) #[['Y', 'R', 'R'], ['0', 'Y', 'Y'], ['Y', 'R', 'R']])
 			level=1
@@ -663,6 +788,8 @@ def play_game(ctrl_c=False):
 						uniq_elements.append(element)
 #			break
 		level_initial_moves=int(moves)
+		if level!=1:
+			moves_message+="Promoted to Level {0} \n".format(level)
 #		print(uniq_elements)
 #		print(level_matrix)
 #		exit()
@@ -675,6 +802,10 @@ def play_game(ctrl_c=False):
 #		choice=""
 		with term.fullscreen(), term.cbreak(), term.hidden_cursor():
 			while True: #This while loop (statement only) can be removed and level promotion be handed to if empty==True block
+
+				"""
+#UI LOGIC STARTS###############################################################################################################
+
 #				print("\033c",end="",flush=True) #Clear Screen at each prompt
 				print(term.clear+term.home)
 #				print_board(level,level_matrix)
@@ -723,6 +854,7 @@ def play_game(ctrl_c=False):
 				print("Press W or Arrow Up key to swipe UP, S or Arrow Down key to swipe DOWN,")
 				print("Press A or Arrow Left to swipe LEFT, D or Arrow Right to swipe RIGHT")
 				print("Press TAB to Choose the options, Enter to Select an option")
+				print(("-"*72))
 				for row in level_matrix:
 					row_sep=("-"*(len(row)*5+1)).center(72)
 					print(row_sep)
@@ -736,7 +868,7 @@ def play_game(ctrl_c=False):
 					print(centralise_row+row_line)
 				print(("-"*(len(row)*5+1)).center(72))
 				print("-"*72)
-				btns=["UNDO","RESET","EXIT"]
+				btns=["UNDO","Restart","EXIT"]
 				if level_matrix==level_dictionary[level]:
 					btns[0]="\u001b[9mUNDO\u001b[0m"
 				btn_line = "   "
@@ -747,6 +879,39 @@ def play_game(ctrl_c=False):
 					else:
 						btn_line += " "*(12+(len(level_matrix[0])*1)-2) + btns[index]
 				print(btn_line.center(72))
+				"""
+#				if level==0:
+#					print_board(1,moves,focus,btn_idx,message,moves_message,level_matrix)
+#				else:
+				print_board(level,moves,focus,btn_idx,message,moves_message,level_matrix)
+				message=""
+				moves_message=""
+				if moves==0:
+					print("\033[31mGAME OVER ! you are out of moves.\033[0m")
+#					while True:
+#						print("\r",end="",flush=True)
+#						print("\r(R)etry or (E)xit ? ",end="",flush=True)
+#					choice=input("(R)etry or (E)xit ? ")
+#						if ((choice.isalpha()) and (choice.upper() in "RE")) and len(choice)==1:
+#						if choice.upper()=="R" or choice.upper()=="E":
+					print("Choose between Restart and Exit")
+#					continue
+					"""
+#					if choice.isalpha():
+					if choice=="E" or choice=="e":
+						choice="E"
+						print("Saving current progress before exiting...")
+						save_progress(level,moves,level_matrix,old_level_matrices)
+						print("Progress saved, exiting...")
+#						break
+					elif choice=="R" or choice=="r":
+						level=0 # level gets +1 at each loop iteration
+						moves=3
+						level_matrix=deepcopy(level_dictionary[1])
+						old_level_matrices=[]
+#						break
+					break
+					"""
 				if get_back=="y":
 					print("COMFIRMATION : Exit the Game (Y/N) ?")
 				elif restart_game=="y":
@@ -762,9 +927,9 @@ def play_game(ctrl_c=False):
 #				if get_back=="y":
 #					direction="E"
 #				elif restart_game=="y":
-#					print("CONFIRMATION: Do you want to RESET the Game (Y/N) ? ")
+#					print("CONFIRMATION: Do you want to Restart the Game (Y/N) ? ")
 #				if level_matrix==level_dictionary[level]:
-#					print("Enter\u001b[9m U to Undo,\u001b[0m E to Exit, R to Reset the Game") #UNDO option disabled at game start
+#					print("Enter\u001b[9m U to Undo,\u001b[0m E to Exit, R to Restart the Game") #UNDO option disabled at game start
 #				else:
 #					print("Enter U to Undo, E to Exit, R to Restart the game")
 				direction=""
@@ -824,8 +989,11 @@ def play_game(ctrl_c=False):
 							btn_idx=0
 							tab_count=0
 							continue
-
-				elif focus == 'matrix':
+				elif key.name=="KEY_ESCAPE":
+					get_back="y"
+#					focus="buttons"
+					continue
+				if focus == 'matrix' and moves!=0:
 					if key.name=="KEY_UP":
 						direction="W"
 					elif key.name=="KEY_LEFT":
@@ -843,7 +1011,7 @@ def play_game(ctrl_c=False):
 							direction="S"
 						elif str(key).upper()=="D":
 							direction="D"
-				elif focus == 'buttons':
+				if focus == 'buttons' or get_back=="y":
 					if get_back=="y" or restart_game=="y":
 #						print("CONFIRMATION: EXIT ?")
 						if str(key).isalpha():
@@ -858,7 +1026,7 @@ def play_game(ctrl_c=False):
 									sleep(1) #To display save message
 									break
 								elif restart_game=="y": #Probably has some issues with level promotion
-									level=0 #level gets +1 at each loop iteration
+									level=1
 									moves=3
 									level_matrix=deepcopy(level_dictionary[1])
 									old_level_matrices=[]
@@ -888,7 +1056,7 @@ def play_game(ctrl_c=False):
 						else:
 							btn_idx=2
 						continue
-					elif key.name=="KEY_ENTER" or key=='\n':
+					elif key.name=="KEY_ENTER" or key=='\n': #or key.name=="KEY_ESCAPE":
 						focus="buttons"
 						if btn_idx==0:
 							level_matrix,message=deepcopy(undo_last_action())
@@ -910,6 +1078,8 @@ def play_game(ctrl_c=False):
 							else:
 								btn_idx=2
 						continue
+#UI LOGIC COMPLETE##############################################################################################################################
+
 #				if direction.upper()=="W" or direction.upper()=="A" or direction.upper()=="S" or direction.upper()=="D":
 #				continue
 				if direction in "WASD":
@@ -922,7 +1092,14 @@ def play_game(ctrl_c=False):
 					move_blocks(direction,level_matrix)
 					if old_level_matrices[-1]!=level_matrix:
 						moves=moves-1
-						moves_message,moves,level_matrix=check_for_match(moves,level_matrix)
+						print_board(level,moves,focus,btn_idx,message,moves_message,level_matrix)
+						sleep(0.2)
+						moves_message,moves,level_matrix=check_for_match(level,moves,focus,btn_idx,message,moves_message,level_matrix)
+#						if matched==True:
+#							print_board(level,moves,focus,btn_idx,message,moves_message,old_level_matrices[-1])
+#							sleep(0.5)
+#							print_board(level,moves,focus,btn_idx,message,moves_message,level_matrix)
+#							matched=False
 						empty=True
 						for row in level_matrix:
 							for element in row:
@@ -934,15 +1111,21 @@ def play_game(ctrl_c=False):
 							if empty==False:
 								break
 						if empty==True:
+							print_board(level,moves,focus,btn_idx,message,moves_message,level_matrix)
+							sleep(0.2)
 #							level+=1
-							save_progress(level+1,moves,level_dictionary[level+1],old_level_matrices)
+							# This save progress block should move to the line next to level+=1
+							# The code below will save a non existing level if the current level is last
+							if next(reversed(level_dictionary))!=level: #level_dictionary.keys())[-1]!=level:
+								save_progress(level+1,moves,level_dictionary[level+1],old_level_matrices)
 #							if len(uniq_elements)==(moves - level_initial_moves):
 							if moves==level_initial_moves: #Doesn't works if two blocks match simultaneously
 								moves_message+="Perfect +1 move\n"
 								moves+=1
-							moves_message+="Promoted to Level {0} \n".format(level+1)
 #							if len(uniq_elements)==(moves - level_initial_moves):
 #								moves_message+="Perfect \n"
+							old_level_matrices=[]
+#							empty=False
 							break
 						else:
 							save_progress(level,moves,level_matrix,old_level_matrices)
@@ -975,11 +1158,16 @@ def play_game(ctrl_c=False):
 #						moves=moves-1
 			if choice=="E" or direction=="E" or ctrl_c==True:
 				break
-def choose_between_edit_play_or_auto_play():
+def menu():
+	options=["Play","Add or Edit level","Automatic play","Quit"]
+	return
+def choose_between_edit__play_or_auto_play():
 	return
 def auto_play():
 	return
+
 play_game()
+exit()
 #try:
 #	play_game()
 #	pass
@@ -989,3 +1177,28 @@ play_game()
 #	save_progress(level,moves,level_matrix,old_level_matrices)
 #	print("Progress saved, exiting...")
 #	exit()
+
+old_level_matrices=[]
+# --- Test Cases ---
+
+matrix1 = [['0', 'R', 'R'],
+           ['Y', 'Y', 'Y'],
+           ['Y', 'R', 'R']]
+#print(f"Matches found: {check_for_match(3,matrix1)}")
+# Output: 1 (The Y's form a group of 4)
+
+matrix2 = [['R', 'R', 'Y', 'R'],
+           ['0', 'Y', 'Y', 'R'],
+           ['0', 'Y', 'B', '0'],
+           ['0', 'B', 'B', 'B']]
+t=check_for_match(2,3,"matrix",0,"","",matrix2)
+print(f"Matches found: {t}")
+exit()
+# Output: 2 (Y and B both have groups of 4)
+
+level_matrix=[["Y","R","R"],["0","Y","Y"],["Y","R","R"]]
+print(check_for_match(2,3,"matrix",0,"","",level_matrix)) #[["Y","Y","0","0"],["Y","Y","Y","0"],["0","Y","0","0"],["Y","0","Y","0"]])) #level_dictionary[1])
+
+print(check_for_match(3,[["Y","R","R"],["Y","Y","0"],["Y","R","R"]])) #level_dictionary[1])
+
+exit()
